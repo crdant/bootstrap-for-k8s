@@ -1,0 +1,106 @@
+#! /usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+secrets_dir=${script_dir}/../secrets
+work_dir=${script_dir}/../work
+product_dir="${work_dir}/tanzu-application-service"
+
+main() {
+  parse_args $@
+  create_cluster 
+  prepare_cluster
+  download_tas
+  deploy_tas
+}
+
+parse_args() {
+  if [ $# -gt 0 ]; then
+    while [ $# -gt 0 ]; do
+      case $1 in
+        --platform | -p)
+          platform=${2}
+          shift
+          ;;
+        --domain | -d)
+          domain=${2}
+          shift
+          ;;
+        --release | --release-version | -r)
+          release=${2}
+          shift
+          ;;
+        *)
+          echo "Unrecognized option: $1" 1>&2
+          exit 1
+          ;;
+      esac
+      shift
+    done
+  fi
+}
+
+create_cluster() {
+  # provider=${1}
+  minikube start --profile tas --kubernetes-version v1.15.11 --cpus 6 --memory 8182 --container-runtime containerd 
+  minikube profile tas
+}
+
+prepare_cluster() { 
+  kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml
+  minikube_ip=$(minikube ip)
+  kubectl apply -f - <<CONFIG
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    namespace: metallb-system
+    name: config
+  data:
+    config: |
+      address-pools:
+      - name: default
+        protocol: layer2
+        addresses:
+        - ${minikube_ip}/28 
+CONFIG
+  kubectl create namespace cert-manager
+  kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.13.1/cert-manager.yaml
+}
+
+download_tas() {
+  local api_token=$(cat ${secrets_dir}/api-token.enc | keybase pgp decrypt)
+  pivnet login --api-token ${api_token}
+  
+  local product_slug='pas-for-kubernetes'
+  local release_version=$(pivnet releases --product-slug ${product_slug} --format json | jq -r '. | sort_by(.release_date) | reverse | .[0].version')
+
+  pivnet download-product-files --product-slug='pas-for-kubernetes' \
+    --release-version="${release_version}" \
+    --download-dir ${work_dir} \
+    --glob '*.tar'
+    
+  tar -C ${product_dir} -xf ${work_dir}/tanzu-application-service.${release_version}.tar
+  rm ${product_dir}/custom-overlays/replace-loadbalancer-with-clusterip.yaml
+}
+
+deploy_tas() {
+  local values_file="${work_dir}/deployment-values.yml"
+  pd ${product_dir}
+    export YTT_TAS_registry__server="registry.pivotal.io"
+    export YTT_TAS_registry__username="$(cat ${secrets_dir}/pivnet.json.enc | keybase pgp decrypt | jq -r .username)"
+    export YTT_TAS_registry__password="$(cat ${secrets_dir}/pivnet.json.enc | keybase pgp decrypt | jq -r .password)"
+    config/cf-for-k8s/hack/generate-values.sh -d "${domain}" > ${values_file}
+    bin/install-tas.sh ${values_file}
+  pop
+}
+
+pd () {
+  local directory=${1}
+  pushd ${directory} > /dev/null
+}
+
+pop() {
+  popd > /dev/null
+}
+
+main $@
