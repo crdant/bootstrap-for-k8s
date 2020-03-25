@@ -1,0 +1,9 @@
+secrets/*
+!secrets/.gitkeep
+work/*
+!work/.gitkeep
+templates/*
+!templates/.gitkeep
+state
+.DS_Store
+.terraform

@@ -1,0 +1,11 @@
+tap 'jq'
+tap 'pivotal/tap'
+brew 'pivnet'
+tap 'k14s/tap'
+brew 'ytt'
+brew 'kbld'
+brew 'kapp'
+brew 'imgpkg'
+brew 'kwt'
+brew 'vendir'
+
