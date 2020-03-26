@@ -48,7 +48,8 @@ parse_args() {
 
 create_cluster() {
   # provider=${1}
-  minikube start --profile tas --kubernetes-version v1.15.11 --cpus 6 --memory 8182 --container-runtime containerd 
+  minikube start --profile tas --kubernetes-version v1.15.11 --container-runtime containerd \
+    --cpus 6 --memory 8182 --disk-size 30gb 
   minikube profile tas
 }
 
