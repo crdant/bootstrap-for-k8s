@@ -86,6 +86,7 @@ download_tas() {
     --download-dir ${work_dir} \
     --glob '*.tar'
     
+  rm -rf ${product_dir}/*
   tar -C ${product_dir} -xf ${work_dir}/tanzu-application-service.${release_version}.tar
   rm ${product_dir}/custom-overlays/replace-loadbalancer-with-clusterip.yaml
   cp ${overlay_dir}/* ${product_dir}/custom-overlays
