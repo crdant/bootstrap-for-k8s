@@ -1,0 +1,75 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:base64", "base64")
+#@ load("@ytt:json", "json")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({ "kind": "Secret", "metadata":{"name":"istio-ingressgateway-certs", "namespace": "istio-system"}}),expects="1+"
+#@overlay/replace
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: istio-ingressgateway-certs
+  namespace: istio-system
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
+spec:
+  secretName: istio-ingressgateway-certs
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  commonName: #@ data.values.system_domain
+  dnsNames:
+  - #@ data.values.system_domain 
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: clouddns-solver-credentials
+  namespace: cert-manager
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
+data:
+  service_account.json: #@ base64.encode(data.values.kpack.registry.password)
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  namespace: cert-manager
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
+spec:
+  acme:
+   server: https://acme-staging-v02.api.letsencrypt.org/directory
+   email: #@ json.decode(data.values.kpack.registry.password)["client_email"]
+   privateKeySecretRef:
+     name: letsencrypt-credentials
+   solvers:
+   - dns01:
+       clouddns:
+         project: #@ json.decode(data.values.kpack.registry.password)["project_id"]
+         serviceAccountSecretRef:
+           name: clouddns-solver-credentials
+           key: service_account.json
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+  namespace: cert-manager
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: #@ json.decode(data.values.kpack.registry.password)["client_email"]
+    privateKeySecretRef:
+      name: letsencrypt-n-credentials
+    solvers:
+    - dns01:
+        clouddns:
+          project: #@ json.decode(data.values.kpack.registry.password)["project_id"]
+          serviceAccountSecretRef:
+            name: clouddns-solver-credentials
+            key: service_account.json

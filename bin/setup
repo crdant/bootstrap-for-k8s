@@ -2,8 +2,10 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
-secrets_dir=${script_dir}/../secrets
-work_dir=${script_dir}/../work
+project_dir=${script_dir}/..
+overlay_dir=${project_dir}/overlays
+secrets_dir=${project_dir}/secrets
+work_dir=${project_dir}/work
 product_dir="${work_dir}/tanzu-application-service"
 
 main() {
@@ -24,6 +26,10 @@ parse_args() {
           ;;
         --domain | -d)
           domain=${2}
+          shift
+          ;;
+        --gcp-key-file | -g)
+          gcp_key_file=${2}
           shift
           ;;
         --release | --release-version | -r)
@@ -81,6 +87,7 @@ download_tas() {
     
   tar -C ${product_dir} -xf ${work_dir}/tanzu-application-service.${release_version}.tar
   rm ${product_dir}/custom-overlays/replace-loadbalancer-with-clusterip.yaml
+  cp ${overlay_dir}/* ${product_dir}/custom-overlays
 }
 
 deploy_tas() {
