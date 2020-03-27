@@ -14,6 +14,7 @@ main() {
   prepare_cluster
   download_tas
   deploy_tas
+  clean_up
 }
 
 parse_args() {
@@ -30,6 +31,10 @@ parse_args() {
           ;;
         --gcp-key-file | -g)
           gcp_key_file=${2}
+          if [ -f ${gcp_key_file}.enc ] ; then
+            cat ${gcp_key_file}.enc | keybase pgp decrypt > ${gcp_key_file}
+            decrypted=true
+          fi
           shift
           ;;
         --release | --release-version | -r)
@@ -100,10 +105,16 @@ deploy_tas() {
     export YTT_TAS_registry__username="$(cat ${secrets_dir}/pivnet.json.enc | keybase pgp decrypt | jq -r .username)"
     export YTT_TAS_registry__password="$(cat ${secrets_dir}/pivnet.json.enc | keybase pgp decrypt | jq -r .password)"
     export YTT_TAS_certmanager__solver__clouddns__keyfile="$(cat ${gcp_key_file})"
-    config/cf-for-k8s/hack/generate-values.sh -d "${domain}" > ${values_file}
+    config/cf-for-k8s/hack/generate-values.sh -d "${domain}" -g "${gcp_key_file}" > ${values_file}
     bin/install-tas.sh ${values_file}
   pop
   enable_docker
+}
+
+clean_up () {
+  if [ -n ${decrypted} ] ; then
+    rm -f ${gcp_key_file}
+  fi
 }
 
 enable_docker() {
