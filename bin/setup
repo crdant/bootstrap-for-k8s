@@ -72,7 +72,7 @@ prepare_cluster() {
 CONFIG
   kubectl create namespace cert-manager
   kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.13.1/cert-manager.yaml
-  sleep 60
+  pause_for "cert-manager initialization" 90
 }
 
 download_tas() {
@@ -102,6 +102,20 @@ deploy_tas() {
     config/cf-for-k8s/hack/generate-values.sh -d "${domain}" -g "${gcp_key_file}" > ${values_file}
     bin/install-tas.sh ${values_file}
   pop
+}
+
+pause_for() {
+  message=${1}
+  time=${2}
+
+  i=1
+  sp="/-\|"
+  echo -n "Giving ${message} time to complete... "
+  while [ ${i} -lt ${time} ];
+  do
+    printf "\b${sp:i++%${#sp}:1}"
+    sleep 1
+  done
 }
 
 pd () {
