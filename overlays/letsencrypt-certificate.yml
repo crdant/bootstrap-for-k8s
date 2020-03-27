@@ -21,6 +21,7 @@ spec:
   commonName: #@ data.values.system_domain
   dnsNames:
   - #@ data.values.system_domain 
+  - #@ "*." + data.values.system_domain
 ---
 apiVersion: v1
 kind: Secret
