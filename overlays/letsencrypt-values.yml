@@ -1,0 +1,9 @@
+#@ load("@ytt:data", "data")
+
+#@data/values
+---
+#@overlay/match missing_ok=True
+certmanager:
+  solver:
+    clouddns:
+      keyfile: ""

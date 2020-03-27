@@ -2,8 +2,7 @@
 #@ load("@ytt:base64", "base64")
 #@ load("@ytt:json", "json")
 #@ load("@ytt:data", "data")
-
-#@overlay/match by=overlay.subset({ "kind": "Secret", "metadata":{"name":"istio-ingressgateway-certs", "namespace": "istio-system"}}),expects="1+"
+#@overlay/match by=overlay.subset({ "kind": "Secret", "metadata":{"name":"istio-ingressgateway-certs", "namespace": "istio-system"}}),expects=1
 #@overlay/replace
 ---
 apiVersion: cert-manager.io/v1alpha2
@@ -31,7 +30,7 @@ metadata:
   annotations:
     kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
 data:
-  service_account.json: #@ base64.encode(data.values.kpack.registry.password)
+  service_account.json: #@ base64.encode(data.values.certmanager.solver.clouddns.keyfile)
 ---
 apiVersion: cert-manager.io/v1alpha2
 kind: ClusterIssuer
@@ -43,13 +42,13 @@ metadata:
 spec:
   acme:
    server: https://acme-staging-v02.api.letsencrypt.org/directory
-   email: #@ json.decode(data.values.kpack.registry.password)["client_email"]
+   email: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["client_email"]
    privateKeySecretRef:
      name: letsencrypt-credentials
    solvers:
    - dns01:
        clouddns:
-         project: #@ json.decode(data.values.kpack.registry.password)["project_id"]
+         project: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["project_id"]
          serviceAccountSecretRef:
            name: clouddns-solver-credentials
            key: service_account.json
@@ -64,13 +63,13 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: #@ json.decode(data.values.kpack.registry.password)["client_email"]
+    email: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["client_email"]
     privateKeySecretRef:
       name: letsencrypt-n-credentials
     solvers:
     - dns01:
         clouddns:
-          project: #@ json.decode(data.values.kpack.registry.password)["project_id"]
+          project: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["project_id"]
           serviceAccountSecretRef:
             name: clouddns-solver-credentials
             key: service_account.json
