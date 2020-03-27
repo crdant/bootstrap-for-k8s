@@ -103,6 +103,18 @@ deploy_tas() {
     config/cf-for-k8s/hack/generate-values.sh -d "${domain}" > ${values_file}
     bin/install-tas.sh ${values_file}
   pop
+  enable_docker
+}
+
+enable_docker() {
+  cf_login
+  cf enable-feature-flag diego_docker
+}
+
+cf_login() {
+  password=$(cat ../deployment-values.yml | yq -r .cf_admin_password)
+  system_domain=$(cat ../deployment-values.yml | yq -r .system_domain)
+  cf login -a https://api.${system_domain} -u admin -p ${password} -o system
 }
 
 pause_for() {

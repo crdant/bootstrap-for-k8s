@@ -1,4 +1,5 @@
 brew 'jq'
+brew 'yq'
 tap 'cloudfoundry/tap'
 brew 'bosh-cli'
 tap 'pivotal/tap'
