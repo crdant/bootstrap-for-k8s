@@ -1,0 +1,46 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:base64", "base64")
+
+#! This will set overlay a static IP for the istio load balancer. 
+#!   Remove when cloudfoundry/cf-for-k8s#94 makes it to TAS
+#@overlay/match by=overlay.subset({"kind": "Service", "metadata":{"name": "istio-ingressgateway"}})
+---
+spec:
+  #@overlay/match missing_ok=True
+  loadBalancerIP: #@ data.values.istio_static_ip
+
+#@overlay/match by=overlay.subset({"metadata":{"namespace": "metallb-system"}}),expects="1+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/metallb"
+
+#@ metallb_config = """address-pools:
+#@ - name: default
+#@   protocol: layer2
+#@   addresses:
+#@   - {}""".format(data.values.metallb.pools.default.cidr)
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/metallb"
+data:
+  config: #@ metallb_config
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: memberlist
+  namespace: metallb-system
+  annotations:
+    kapp.k14s.io/change-group: "tas.field.vmware.io/metallb"
+data:
+  secretkey: #@ base64.encode(data.values.metallb.memberlist.secretkey)

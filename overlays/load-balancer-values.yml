@@ -1,0 +1,16 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@data/values
+---
+#@overlay/match missing_ok=True
+metallb:
+  memberlist:
+    secretkey: ""
+  pools:
+    default:
+      cidr: ""
+
+#!   Remove when cloudfoundry/cf-for-k8s#94 makes it to TAS
+#@overlay/match missing_ok=True
+istio_static_ip: ""

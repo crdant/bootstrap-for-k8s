@@ -1,0 +1,16 @@
+apiVersion: vendir.k14s.io/v1alpha1
+kind: Config
+
+directories:
+- path: work/tanzu-application-service/config/_metallb
+  contents:
+  - path: .
+    git:
+      url: https://github.com/metallb/metallb
+      ref: v0.9.3
+    includePaths:
+    - manifests/**
+    excludePaths:
+    - manifests/kustomization.yaml
+    - manifests/tutorial*.yaml
+    - manifests/example*.yaml
