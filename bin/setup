@@ -39,7 +39,7 @@ parse_args() {
           shift
           ;;
         --release | --release-version | -r)
-          release=${2}
+          release_version=${2}
           shift
           ;;
         *)
@@ -93,7 +93,11 @@ download_tas() {
   pivnet login --api-token ${api_token}
   
   local product_slug='pas-for-kubernetes'
-  local release_version=$(pivnet releases --product-slug ${product_slug} --format json | jq -r '. | sort_by(.release_date) | reverse | .[0].version')
+  set +u
+  if [ -z "${release_version}" ]; then
+    release_version=$(pivnet releases --product-slug ${product_slug} --format json | jq -r '. | sort_by(.software_files_updated_at) | reverse | .[0].version')
+  fi
+  set -u
 
   pivnet download-product-files --product-slug='pas-for-kubernetes' \
     --release-version="${release_version}" \
