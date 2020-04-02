@@ -1,0 +1,22 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#! Currently ytt does not allow overlaying maps on top of nils;
+#! remove nil annotations before further overlays (https://github.com/k14s/ytt/issues/108)
+#! shamelessly stolen from TAS for K8s
+#@overlay/match by=overlay.subset({"metadata":{"namespace":"cert-manager","annotations": None}}),expects="1+"
+---
+metadata:
+  #@overlay/remove
+  annotations:
+
+#! Add image pull secret to all service accounts and give them a dedicated kapp order group
+#@overlay/match by=overlay.subset({"metadata":{"namespace": "cert-manager"}}),expects="1+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/cert-manager"
+    kapp.k14s.io/change-rule: "upsert after upserting bootstrap.tas.crdant.io/metallb"
+
+

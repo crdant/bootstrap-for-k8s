@@ -2,15 +2,23 @@ apiVersion: vendir.k14s.io/v1alpha1
 kind: Config
 
 directories:
-- path: work/tanzu-application-service/config/_metallb
+- path: config/_github.com
   contents:
-  - path: .
+  - path: metallb
     git:
       url: https://github.com/metallb/metallb
-      ref: v0.9.3
+      ref: v0.8.2
     includePaths:
     - manifests/**
     excludePaths:
     - manifests/kustomization.yaml
     - manifests/tutorial*.yaml
     - manifests/example*.yaml
+  - path: cert-manager
+    githubRelease:
+      slug: jetstack/cert-manager
+      tag: v0.14.1
+      disableAutoChecksumValidation: true
+    excludePaths:
+    - '*legacy*'
+    - '*crds*'

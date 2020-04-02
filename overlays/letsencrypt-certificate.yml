@@ -11,7 +11,7 @@ metadata:
   name: istio-ingressgateway-certs
   namespace: istio-system
   annotations:
-    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/cert-manager"
 spec:
   secretName: istio-ingressgateway-certs
   issuerRef:
@@ -21,55 +21,3 @@ spec:
   dnsNames:
   - #@ data.values.system_domain 
   - #@ "*." + data.values.system_domain
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: clouddns-solver-credentials
-  namespace: cert-manager
-  annotations:
-    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
-data:
-  service_account.json: #@ base64.encode(data.values.certmanager.solver.clouddns.keyfile)
----
-apiVersion: cert-manager.io/v1alpha2
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-staging
-  namespace: cert-manager
-  annotations:
-    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
-spec:
-  acme:
-   server: https://acme-staging-v02.api.letsencrypt.org/directory
-   email: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["client_email"]
-   privateKeySecretRef:
-     name: letsencrypt-credentials
-   solvers:
-   - dns01:
-       clouddns:
-         project: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["project_id"]
-         serviceAccountSecretRef:
-           name: clouddns-solver-credentials
-           key: service_account.json
----
-apiVersion: cert-manager.io/v1alpha2
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-production
-  namespace: cert-manager
-  annotations:
-    kapp.k14s.io/change-group: "tas.field.vmware.io/cert-manager"
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["client_email"]
-    privateKeySecretRef:
-      name: letsencrypt-n-credentials
-    solvers:
-    - dns01:
-        clouddns:
-          project: #@ json.decode(data.values.certmanager.solver.clouddns.keyfile)["project_id"]
-          serviceAccountSecretRef:
-            name: clouddns-solver-credentials
-            key: service_account.json

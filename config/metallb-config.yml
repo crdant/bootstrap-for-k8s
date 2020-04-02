@@ -1,0 +1,38 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:base64", "base64")
+
+#@overlay/match by=overlay.subset({"metadata":{"namespace": "metallb-system"}}),expects="1+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/metallb"
+
+#@ metallb_config = """address-pools:
+#@ - name: default
+#@   protocol: layer2
+#@   addresses:
+#@   - {}""".format(data.values.metallb.pools.default.cidr)
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+  annotations:
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/metallb"
+data:
+  config: #@ metallb_config
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: memberlist
+  namespace: metallb-system
+  annotations:
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/metallb"
+data:
+  secretkey: #@ base64.encode(data.values.metallb.memberlist.secretkey)
