@@ -67,7 +67,7 @@ create_cluster() {
 }
 
 create_minikube_cluster() {
-  minikube start --profile tas --kubernetes-version v1.15.11 --container-runtime containerd \
+  minikube start --profile tas --kubernetes-version v1.16.8 --container-runtime containerd \
     --cpus 6 --memory 10240 --disk-size 30gb 
   minikube profile tas
 }
