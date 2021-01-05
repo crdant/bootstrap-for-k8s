@@ -73,7 +73,7 @@ create_minikube_cluster() {
 }
 
 prepare_cluster() { 
-  local static_ip="$(dig '*.'${domain} +short)"
+  local static_ip="$(dig ${domain} +short)"
   pd ${project_dir}
   (   
     vendir sync
