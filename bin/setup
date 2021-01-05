@@ -125,9 +125,8 @@ deploy_tas() {
     export YTT_TAS_system_registry__password="$(cat ${secrets_dir}/pivnet.json.enc | keybase pgp decrypt | jq -r .password)"
     # export YTT_TAS_istio_static_ip=${static_ip}
 
-    config/cf-for-k8s/hack/generate-values.sh -d "${domain}" -g "${gcp_key_file}" > ${values_file}
-    hack/generate-values.sh -d "${domain}" -g "${gcp_key_file}" >> custom-overlays/kpack-values.yaml 
-    bin/install-tas.sh ${values_file}
+    bin/generate-values.sh -d "${domain}" -g "${gcp_key_file}" > ${values_file}
+    bin/install-tas.sh ${values_dir}
   )
   pop
   enable_docker
