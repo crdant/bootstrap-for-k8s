@@ -16,7 +16,7 @@ metadata:
 metadata:
   #@overlay/match missing_ok=True
   annotations:
-    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/cert-manager"
+    kapp.k14s.io/change-group: "crdant.io/cert-manager"
     kapp.k14s.io/change-rule: "upsert after upserting bootstrap.tas.crdant.io/metallb"
 
 

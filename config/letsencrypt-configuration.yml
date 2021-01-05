@@ -9,8 +9,8 @@ metadata:
   name: clouddns-solver-credentials
   namespace: cert-manager
   annotations:
-    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt"
-    kapp.k14s.io/change-rule: "upsert after upserting bootstrap.tas.crdant.io/cert-manager"
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt-credentials"
+    kapp.k14s.io/change-rule: "upsert before upserting bootstrap.tas.crdant.io/cert-manager"
 data:
   service_account.json: #@ base64.encode(data.values.certmanager.solver.clouddns.keyfile)
 ---
@@ -20,7 +20,7 @@ metadata:
   name: letsencrypt-staging
   namespace: cert-manager
   annotations:
-    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt"
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt-issuers"
     kapp.k14s.io/change-rule: "upsert after upserting bootstrap.tas.crdant.io/cert-manager"
 spec:
   acme:
@@ -42,7 +42,7 @@ metadata:
   name: letsencrypt-production
   namespace: cert-manager
   annotations:
-    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt"
+    kapp.k14s.io/change-group: "bootstrap.tas.crdant.io/letsencrypt-issuers"
     kapp.k14s.io/change-rule: "upsert after upserting bootstrap.tas.crdant.io/cert-manager"
 spec:
   acme:
