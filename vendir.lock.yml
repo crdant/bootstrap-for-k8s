@@ -1,0 +1,12 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - git:
+      commitTitle: Automated update for release v0.8.2
+      sha: aa0b29d67b7d7e4f0fb6775f42aef52f6c685c78
+    path: metallb
+  - githubRelease:
+      url: https://api.github.com/repos/jetstack/cert-manager/releases/24862874
+    path: cert-manager
+  path: config/_github.com
+kind: LockConfig
